@@ -11,6 +11,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Flow;
+import java.util.regex.Pattern;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
@@ -156,14 +157,22 @@ public class JmsConnector implements InboundConnector, OutboundConnector {
 
     public void stop(String channel) {
         sources.stream()
-                .filter(s -> s.getChannelName().equals(channel))
+                .filter(s -> channelMatches(s.getChannelName(), channel))
                 .forEach(JmsSource::stop);
     }
 
     public void start(String channel) {
         sources.stream()
-                .filter(s -> s.getChannelName().equals(channel))
+                .filter(s -> channelMatches(s.getChannelName(), channel))
                 .forEach(JmsSource::start);
+    }
+
+    private boolean channelMatches(String sourceChannelName, String targetChannel) {
+        if (sourceChannelName == null || targetChannel == null) {
+            return false;
+        }
+        return sourceChannelName.equals(targetChannel) ||
+                sourceChannelName.matches("^%s\\$\\d+".formatted(Pattern.quote(targetChannel)));
     }
 
     @Override
