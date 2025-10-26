@@ -146,6 +146,26 @@ public class JmsConnector implements InboundConnector, OutboundConnector {
         this.executor.shutdown();
     }
 
+    public void stopAll() {
+        sources.forEach(JmsSource::stop);
+    }
+
+    public void startAll() {
+        sources.forEach(JmsSource::start);
+    }
+
+    public void stop(String channel) {
+        sources.stream()
+                .filter(s -> s.getChannelName().equals(channel))
+                .forEach(JmsSource::stop);
+    }
+
+    public void start(String channel) {
+        sources.stream()
+                .filter(s -> s.getChannelName().equals(channel))
+                .forEach(JmsSource::start);
+    }
+
     @Override
     public Flow.Publisher<? extends Message<?>> getPublisher(Config config) {
         JmsConnectorIncomingConfiguration ic = new JmsConnectorIncomingConfiguration(config);

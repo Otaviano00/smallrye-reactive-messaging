@@ -40,6 +40,8 @@ class JmsSource {
     private final Multi<IncomingJmsMessage<?>> source;
     private final JmsResourceHolder<JMSConsumer> resourceHolder;
 
+    private final String channel;
+
     private final JmsPublisher publisher;
     private final boolean isTracingEnabled;
     private final JmsOpenTelemetryInstrumenter jmsInstrumenter;
@@ -49,7 +51,7 @@ class JmsSource {
             Instance<OpenTelemetry> openTelemetryInstance, JsonMapping jsonMapping,
             Executor executor) {
         this.isTracingEnabled = config.getTracingEnabled();
-        String channel = config.getChannel();
+        this.channel = config.getChannel();
         final String destinationName = config.getDestination().orElseGet(config::getChannel);
         String selector = config.getSelector().orElse(null);
         boolean nolocal = config.getNoLocal();
@@ -104,6 +106,18 @@ class JmsSource {
     void close() {
         publisher.close();
         resourceHolder.close();
+    }
+
+    public void stop() {
+        resourceHolder.getContext().stop();
+    }
+
+    public void start() {
+        resourceHolder.getContext().start();
+    }
+
+    public String getChannelName() {
+        return channel;
     }
 
     private Destination getDestination(JMSContext context, String name, String type) {
